@@ -2,14 +2,19 @@
 
 เกม Tower Defense บนมือถือ (Android แท้ ไม่ใช่เว็บ) ป้องกันฐานคริสตัลจากอุกกาบาตและหลุมดำด้วยดวงดาว
 
-## มีอะไรในเกม
-- 4 ด่าน: วงโคจรแรก (15 เวฟ), แถบดาวเคราะห์น้อย (20), เนบิวลาวน (25), ใจกลางหลุมดำ (30) ผ่านด่านหนึ่งแล้วด่านถัดไปจะปลดล็อก
-- เริ่มเกมด้วย 5 ดาว ได้เพิ่มทุกเวฟ และได้จาก Satellite / Mars ที่ผลิตดาว
-- ดวงดาว 12 แบบ: Earth, Satellite, Moon (เริ่มต้น) / Saturn, Jupiter (Rare) / Mars (Epic) / Mercury, Venus, Uranus, Neptune, Pluto (Legend) / Sun (Mythical)
-- Enchant แบบสุ่ม 10 แบบ มีสัญลักษณ์ที่มุมของดวงดาว: Damage/Range/Cooldown I–III, Gold, Blitz, Froze, Burn, Moon, Gigantic, Megelinia
-- Effect: Gold, Diamond, Elite, Bigger (เห็นเป็นออร่า เพชร มงกุฎ หรือดาวที่ใหญ่ขึ้น)
-- ศัตรู 9 แบบ: Meteor, Shooting Star, Mega Meteor, EXO Moon, Alternate Moon, EXO Planet, Alternate Planet, Hell Planet และบอส Black Hole (มาทุก 10 เวฟ)
-- อัปเกรดได้ถึง Lv 5 ขายได้ เร่งเกมได้ x1/x2/x3 มีสมุดดวงดาวและหน้าวิธีเล่น
+## มีอะไรในเกม (v2.0)
+- **Lobby**: ข้อมูลผู้เล่น, ตั้งค่า (เปลี่ยนภาษาไทย/English), ระบบสุริยะตรงกลาง, แถบเมนู Shop | Planet | Play | Banner | Enchant
+- **Planet**: ดูสถานะ/ความหายาก, อัปเกรด Lv (ใช้การ์ดซ้ำ + Star), Evolve (เร็ว ๆ นี้), จัด Deck ได้ 4 ดวง, ใช้ Effect Ticket
+- **Play**: Story 4 ด่าน (Challenge / Raid เร็ว ๆ นี้)
+- **Banner**: Regular สุ่ม 1 (100 Star) / สุ่ม 10 (900 Star)
+- **Enchant**: สุ่ม Enchant ด้วย Millite, สุ่มอัตโนมัติจนกว่าจะได้ตัวที่ต้องการ, Index บอกโอกาส
+- **Shop**: Effect Ticket (500 Star) ส่วนอื่นเร็ว ๆ นี้
+- Star ได้จากการเล่นด่าน, Millite ได้จากมินิบอส (2) และบอส (3)
+- ในด่านใช้ SP วางดวงดาวจาก Deck ของคุณ
+
+## ฟอนต์ประจำเกม
+ใช้ฟอนต์ **Kanit** (สัญญาอนุญาต SIL Open Font License ใช้ในเกมได้ฟรี) ระบบ build บน GitHub จะดาวน์โหลดให้อัตโนมัติ
+ถ้า build เองในคอม ให้โหลด Kanit-SemiBold.ttf และ Kanit-BlackItalic.ttf มาใส่ใน `app/src/main/assets/fonts/`
 
 ## วิธีได้ไฟล์ APK (ลิงก์ดาวน์โหลด)
 ### ทางที่ 1: ให้ GitHub build ให้ (ไม่ต้องลงโปรแกรมอะไร)

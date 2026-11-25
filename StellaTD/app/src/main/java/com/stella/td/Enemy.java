@@ -8,5 +8,5 @@ final class Enemy {
     float slow, slowT, stunT, burnDps, burnT, hitFlash;
     float abilT, noDmgT;
     int baseDmg;
-    boolean dead, phased, boss;
+    boolean dead, phased, boss, mini;
 }

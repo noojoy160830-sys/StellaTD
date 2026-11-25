@@ -41,10 +41,21 @@ final class Defs {
     static final float[] P_CD = {0.9f, 10f, 1.0f, 0.2f, 0.9f, 11f, 0.16f, 1.5f, 1.0f, 0.5f, 1.2f, 6f};
     static final float[] P_RANGE = {270, 0, 270, 260, 240, 0, 290, 320, 280, 250, 260, 0};
 
-    // starter planets that can be bought directly
-    static final int[] STARTER = {EARTH, MOON, SATELLITE};
-    static final int[] STARTER_COST = {1, 2, 2};
-    static final int GACHA_BASE = 5, GACHA_MAX = 15;
+    static final String[] P_DESC_EN = {
+            "Fires space missiles",
+            "Produces SP over time",
+            "Throws small meteors, stronger than Earth",
+            "Rapid swarm of tiny meteors",
+            "Red smoke with strong burn",
+            "Produces more SP than Satellite",
+            "Rapid burning meteors",
+            "Piercing tornado with strong burn",
+            "Ice chunks that slow and may stun",
+            "Cold zone slows every enemy in range",
+            "Buffs nearby planets +10% damage",
+            "Heat waves from the base, stronger each time"};
+    /** in-match SP cost to place each planet */
+    static final int[] PLACE_COST = {1, 2, 2, 3, 3, 4, 5, 5, 5, 5, 5, 8};
     static final int MAX_LEVEL = 5;
 
     // ---------- enchants ----------
@@ -55,12 +66,16 @@ final class Defs {
     static final String[] EN_DESC = {"+10% ดาเมจ ต่อระดับ", "+8% ระยะ ต่อระดับ", "-8% คูลดาวน์ ต่อระดับ",
             "ฆ่าศัตรูมีโอกาสได้ดาว / ผลิตเร็วขึ้น", "+ความเร็วโจมตี 35%", "ทำให้ช้า + ดาเมจน้ำแข็ง",
             "ทำให้ติดไฟ", "มีดวงจันทร์จิ๋วช่วยยิง 15%", "+ดาเมจ +ระยะ +ความเร็ว", "+ดาเมจ +ระยะ +ความเร็ว (สุดยอด)"};
+    static final String[] EN_DESC_EN = {"+10% damage per tier", "+8% range per tier", "-8% cooldown per tier",
+            "Kills may drop SP / faster production", "+35% attack speed", "Slows + bonus ice damage",
+            "Sets enemies on fire", "A little moon fires at 15% power", "+damage +range +speed", "+damage +range +speed (ultimate)"};
     static final int[] EN_RARITY = {COMMON, COMMON, COMMON, RARE, RARE, RARE, RARE, LEGEND, LEGEND, MYTHIC};
 
     // ---------- effects ----------
     static final int EF_GOLD = 0, EF_DIAMOND = 1, EF_ELITE = 2, EF_BIGGER = 3;
     static final String[] EF_NAME = {"Gold", "Diamond", "Elite", "Bigger"};
     static final String[] EF_DESC = {"+15% ดาเมจ", "+30% ดาเมจ ระยะ ความเร็ว", "+20% ดาเมจ ระยะ ความเร็ว", "+10% ดาเมจ ระยะ ความเร็ว"};
+    static final String[] EF_DESC_EN = {"+15% damage", "+30% damage, range, speed", "+20% damage, range, speed", "+10% damage, range, speed"};
     static final int[] EF_COLOR = {0xFFFFD23F, 0xFF7DF3FF, 0xFFFF4D5E, 0xFF9CFF7A};
     static final float[] EF_DMG = {1.15f, 1.30f, 1.20f, 1.10f};
     static final float[] EF_RNG = {1.0f, 1.30f, 1.20f, 1.10f};
@@ -82,8 +97,9 @@ final class Defs {
 
     // ---------- stages ----------
     static final String[] ST_NAME = {"วงโคจรแรก", "แถบดาวเคราะห์น้อย", "เนบิวลาวน", "ใจกลางหลุมดำ"};
+    static final String[] ST_NAME_EN = {"First Orbit", "Asteroid Belt", "Swirl Nebula", "Black Hole Core"};
     static final int[] ST_WAVES = {15, 20, 25, 30};
-    static final float[] ST_HP = {1f, 1.2f, 1.45f, 1.75f};
+    static final float[] ST_HP = {0.55f, 1.2f, 1.45f, 1.75f};
     static final int[] ST_COLOR = {0xFF5B8CFF, 0xFF33C6A6, 0xFFE05BD8, 0xFF8A5BFF};
 
     // Map frame is 1000 x 1200 units. Paths are x,y pairs.

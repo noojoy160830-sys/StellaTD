@@ -20,7 +20,10 @@ final class Game {
     final ArrayList<Fx> fx = new ArrayList<>();
     final ArrayList<Integer> queue = new ArrayList<>();
 
-    int stars = 5, baseHp = 20, maxBaseHp = 20, wave = 0, gachaCost = Defs.GACHA_BASE, sunCount = 0;
+    final Profile pf;
+    final int[] deck;
+    int stars = 5, baseHp = 20, maxBaseHp = 20, wave = 0, sunCount = 0;
+    int earnStars, earnMillite, bossKills;
     boolean inWave, won, lost;
     float prepT = 12f, spawnT, spawnGap = 0.7f, time, shake;
     String banner;
@@ -28,8 +31,10 @@ final class Game {
     int bannerColor = 0xFFFFFFFF;
     final float[] tmp = new float[2];
 
-    Game(int stage) {
+    Game(int stage, Profile pf) {
         this.stage = stage;
+        this.pf = pf;
+        this.deck = pf.deck.clone();
         this.maxWave = Defs.ST_WAVES[stage];
         float[] p = Defs.ST_PATH[stage];
         int n = p.length / 2;
@@ -52,7 +57,7 @@ final class Game {
             slotY[i] = s[i * 2 + 1];
         }
         slots = new Planet[slotX.length];
-        showBanner("วางดวงดาวเพื่อป้องกันฐาน!", 0xFFFFD23F);
+        showBanner(L.t("วางดวงดาวเพื่อป้องกันฐาน!", "Place planets to defend the base!"), 0xFFFFD23F);
     }
 
     static float dist(float x1, float y1, float x2, float y2) {
@@ -82,7 +87,7 @@ final class Game {
     }
 
     // ------------------------------------------------------------------ stats
-    float enchDmg(Planet p) {
+    static float enchDmg(Planet p) {
         switch (p.enchant) {
             case Defs.EN_DMG: return 1f + 0.10f * p.tier;
             case Defs.EN_GIGA: return 1.4f;
@@ -91,7 +96,7 @@ final class Game {
         }
     }
 
-    float enchRng(Planet p) {
+    static float enchRng(Planet p) {
         switch (p.enchant) {
             case Defs.EN_RNG: return 1f + 0.08f * p.tier;
             case Defs.EN_GIGA: return 1.2f;
@@ -100,7 +105,7 @@ final class Game {
         }
     }
 
-    float enchCd(Planet p) {
+    static float enchCd(Planet p) {
         switch (p.enchant) {
             case Defs.EN_CD: return 1f - 0.08f * p.tier;
             case Defs.EN_BLITZ: return 0.65f;
@@ -110,26 +115,26 @@ final class Game {
         }
     }
 
-    boolean isProducer(Planet p) {
+    static boolean isProducer(Planet p) {
         return Defs.P_KIND[p.type] == Defs.K_PRODUCE;
     }
 
-    float dmgOf(Planet p) {
-        float d = Defs.P_DMG[p.type] * (1f + 0.3f * (p.level - 1)) * enchDmg(p) * (1f + p.buff);
+    static float dmgOf(Planet p) {
+        float d = Defs.P_DMG[p.type] * (1f + 0.3f * (p.level - 1)) * (1f + 0.12f * (p.plv - 1)) * enchDmg(p) * (1f + p.buff);
         if (p.effect >= 0) d *= Defs.EF_DMG[p.effect];
         return d;
     }
 
-    float rangeOf(Planet p) {
+    static float rangeOf(Planet p) {
         float r = Defs.P_RANGE[p.type] * enchRng(p);
         if (p.effect >= 0) r *= Defs.EF_RNG[p.effect];
         return r;
     }
 
-    float cdOf(Planet p) {
+    static float cdOf(Planet p) {
         float c = Defs.P_CD[p.type];
         if (isProducer(p)) {
-            c /= (1f + 0.2f * (p.level - 1));
+            c /= (1f + 0.2f * (p.level - 1)) * (1f + 0.05f * (p.plv - 1));
             if (p.enchant == Defs.EN_GOLD) c *= 0.7f;
             return c;
         }
@@ -138,7 +143,7 @@ final class Game {
         return c;
     }
 
-    int produceAmount(Planet p) {
+    static int produceAmount(Planet p) {
         return (int) Defs.P_DMG[p.type] + (p.level >= 4 ? 1 : 0);
     }
 
@@ -147,9 +152,10 @@ final class Game {
         return p.level * 3;
     }
 
-    String place(int type, int slot, int cost) {
-        if (slots[slot] != null) return "ช่องนี้มีดาวแล้ว";
-        if (stars < cost) return "ดาวไม่พอ";
+    String place(int type, int slot) {
+        int cost = Defs.PLACE_COST[type];
+        if (slots[slot] != null) return L.t("ช่องนี้มีดาวแล้ว", "Slot is taken");
+        if (stars < cost) return L.t("SP ไม่พอ", "Not enough SP");
         stars -= cost;
         Planet p = new Planet();
         p.type = type;
@@ -158,60 +164,20 @@ final class Game {
         p.y = slotY[slot];
         p.spent = cost;
         p.cdT = 0.3f;
-        rollEnchant(p);
-        rollEffect(p);
+        p.plv = pf.level[type];
+        p.enchant = pf.enchant[type];
+        p.tier = pf.tier[type];
+        p.effect = pf.effect[type];
         slots[slot] = p;
         ring(p.x, p.y, Defs.RARITY_COLOR[Defs.P_RARITY[type]], 80);
         for (int i = 0; i < 14; i++) particle(p.x, p.y, Defs.RARITY_COLOR[Defs.P_RARITY[type]], 220);
         return null;
     }
 
-    String gacha(int slot) {
-        int cost = gachaCost;
-        if (slots[slot] != null) return "ช่องนี้มีดาวแล้ว";
-        if (stars < cost) return "ดาวไม่พอ";
-        float r = rnd.nextFloat();
-        int type;
-        if (r < 0.03f) type = Defs.SUN;
-        else if (r < 0.23f) type = Defs.MERCURY + rnd.nextInt(5);
-        else if (r < 0.45f) type = Defs.MARS;
-        else type = rnd.nextBoolean() ? Defs.SATURN : Defs.JUPITER;
-        String err = place(type, slot, cost);
-        if (err == null) {
-            gachaCost = Math.min(gachaCost + 1, Defs.GACHA_MAX);
-            Planet p = slots[slot];
-            String s = "ได้ " + Defs.P_NAME[type] + " (" + Defs.RARITY_NAME[Defs.P_RARITY[type]] + ")";
-            showBanner(s, Defs.RARITY_COLOR[Defs.P_RARITY[type]]);
-            if (p.effect >= 0) text(p.x, p.y - 80, Defs.EF_NAME[p.effect] + "!", Defs.EF_COLOR[p.effect]);
-        }
-        return err;
-    }
-
-    void rollEnchant(Planet p) {
-        float r = rnd.nextFloat();
-        if (r < 0.01f) p.enchant = Defs.EN_MEGE;
-        else if (r < 0.08f) p.enchant = rnd.nextBoolean() ? Defs.EN_MOON : Defs.EN_GIGA;
-        else if (r < 0.30f) p.enchant = Defs.EN_GOLD + rnd.nextInt(4);
-        else {
-            p.enchant = rnd.nextInt(3);
-            float t = rnd.nextFloat();
-            p.tier = t < 0.6f ? 1 : (t < 0.9f ? 2 : 3);
-        }
-    }
-
-    void rollEffect(Planet p) {
-        float r = rnd.nextFloat();
-        if (r < 0.015f) p.effect = Defs.EF_DIAMOND;
-        else if (r < 0.05f) p.effect = Defs.EF_ELITE;
-        else if (r < 0.10f) p.effect = Defs.EF_BIGGER;
-        else if (r < 0.20f) p.effect = Defs.EF_GOLD;
-        else p.effect = -1;
-    }
-
     String upgrade(Planet p) {
-        if (p.level >= Defs.MAX_LEVEL) return "เลเวลสูงสุดแล้ว";
+        if (p.level >= Defs.MAX_LEVEL) return L.t("เลเวลสูงสุดแล้ว", "Max level");
         int c = upgradeCost(p);
-        if (stars < c) return "ดาวไม่พอ";
+        if (stars < c) return L.t("SP ไม่พอ", "Not enough SP");
         stars -= c;
         p.spent += c;
         p.level++;
@@ -237,15 +203,21 @@ final class Game {
         int n = 4 + (int) (wave * 1.3f);
         for (int i = 0; i < n; i++) queue.add(pickEnemy(w));
         boolean boss = wave % 10 == 0 || wave == maxWave;
+        boolean mini = !boss && wave % 10 == 5;
         if (boss) {
             queue.add(Defs.E_BLACKHOLE);
-            showBanner("บอส: หลุมดำมาแล้ว!", 0xFFB86BFF);
+            showBanner(L.t("บอส: หลุมดำมาแล้ว!", "Boss: Black Hole incoming!"), 0xFFB86BFF);
+        } else if (mini) {
+            queue.add(MINI_FLAG + (rnd.nextBoolean() ? Defs.E_HELL : Defs.E_EXOPLANET));
+            showBanner(L.t("มินิบอสมาแล้ว!", "Mini boss incoming!"), 0xFFFF8A2B);
         } else {
-            showBanner("เวฟ " + wave, 0xFFFFFFFF);
+            showBanner(L.t("เวฟ ", "Wave ") + wave, 0xFFFFFFFF);
         }
         spawnGap = Math.max(0.32f, 0.75f - wave * 0.015f);
         spawnT = 0.2f;
     }
+
+    static final int MINI_FLAG = 100;
 
     int pickEnemy(int w) {
         float[] weight = new float[8];
@@ -295,8 +267,20 @@ final class Game {
         return e;
     }
 
-    void spawn(int type) {
-        Enemy e = makeEnemy(type);
+    void spawn(int code) {
+        boolean mini = code >= MINI_FLAG;
+        Enemy e = makeEnemy(code % MINI_FLAG);
+        if (mini) {
+            e.mini = true;
+            e.maxHp *= 5f;
+            e.hp = e.maxHp;
+            e.maxShield *= 5f;
+            e.shield = e.maxShield;
+            e.radius *= 1.4f;
+            e.speed *= 0.8f;
+            e.baseDmg = 5;
+            shake = 0.3f;
+        }
         pointAt(0, tmp);
         e.x = tmp[0];
         e.y = tmp[1];
@@ -308,11 +292,13 @@ final class Game {
         inWave = false;
         int g = 4 + wave / 3;
         stars += g;
+        earnStars += 4 + wave / 2;
         if (wave >= maxWave) {
             won = true;
+            earnStars += 100 * (stage + 1);
             return;
         }
-        showBanner("เคลียร์เวฟ " + wave + "  +" + g + " ดาว", 0xFF9CFF7A);
+        showBanner(L.t("เคลียร์เวฟ ", "Wave cleared ") + wave + "  +" + g + " SP", 0xFF9CFF7A);
         prepT = 5f;
     }
 
@@ -524,7 +510,7 @@ final class Game {
         damage(e, s.dmg, s.src);
         if (s.burnDps > 0) applyBurn(e, s.burnDps, s.burnDur);
         if (s.slowAmt > 0) applySlow(e, s.slowAmt, s.slowDur);
-        if (s.stunCh > 0 && rnd.nextFloat() < s.stunCh && !e.boss) {
+        if (s.stunCh > 0 && rnd.nextFloat() < s.stunCh && !e.boss && !e.mini) {
             e.stunT = Math.max(e.stunT, s.stunDur);
             text(e.x, e.y - 40, "STUN", 0xFF7DF3FF);
         }
@@ -575,17 +561,22 @@ final class Game {
 
     void kill(Enemy e, Planet src) {
         e.dead = true;
+        boolean big = e.boss || e.mini;
         int c = e.boss ? 0xFFB86BFF : 0xFFFFB35C;
         ring(e.x, e.y, c, e.radius * 2f);
-        for (int i = 0; i < (e.boss ? 40 : 8); i++) particle(e.x, e.y, c, e.boss ? 400 : 200);
+        for (int i = 0; i < (big ? 40 : 8); i++) particle(e.x, e.y, c, big ? 400 : 200);
         if (src != null) src.kills++;
         if (src != null && src.enchant == Defs.EN_GOLD && rnd.nextFloat() < 0.35f) {
             stars++;
             starText(e.x, e.y - 30, 1);
         }
-        if (e.boss) {
-            stars += 8;
-            starText(e.x, e.y - 50, 8);
+        if (e.boss || e.mini) {
+            int sp = e.boss ? 8 : 4, mil = e.boss ? 3 : 2;
+            stars += sp;
+            starText(e.x, e.y - 50, sp);
+            earnMillite += mil;
+            bossKills++;
+            text(e.x, e.y - 100, "+" + mil + " Millite", 0xFFC58CFF);
             shake = 0.6f;
         }
         if (e.type == Defs.E_MEGA) {
@@ -635,7 +626,7 @@ final class Game {
                     if (e.abilT > 2.5f) {
                         e.abilT = 0;
                         for (Enemy o : enemies) {
-                            if (o.dead || o.boss || dist(o.x, o.y, e.x, e.y) > 170) continue;
+                            if (o.dead || o.boss || o.mini || dist(o.x, o.y, e.x, e.y) > 170) continue;
                             o.hp = Math.min(o.maxHp, o.hp + o.maxHp * 0.08f);
                         }
                         ring(e.x, e.y, 0xFF7CFF8A, 170);
@@ -654,7 +645,7 @@ final class Game {
                         if (!near.isEmpty()) {
                             Planet p = near.get(rnd.nextInt(near.size()));
                             p.disabledT = 3f;
-                            text(p.x, p.y - 70, "ถูกดูด!", 0xFFB86BFF);
+                            text(p.x, p.y - 70, L.t("ถูกดูด!", "Pulled!"), 0xFFB86BFF);
                         }
                         ring(e.x, e.y, 0xFF8A5BFF, 420);
                     }
